@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">App</string>
+    <string name="accessibility_description">Monitors newly installed apps to detect harmful applications.</string>
+</resources>
