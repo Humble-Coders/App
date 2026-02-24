@@ -10,7 +10,12 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
+import android.widget.Button
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 
@@ -21,11 +26,13 @@ class AppScannerService : AccessibilityService() {
         const val CHANNEL_ID = "app_scanner_channel"
         private const val POLL_INTERVAL_MS = 3000L
         private var notifId = 2000
+        private const val PLAY_STORE_PACKAGE = "com.android.vending"
     }
 
     private val handler = Handler(Looper.getMainLooper())
     private var knownPackages = mutableSetOf<String>()
     private var polling = false
+    private var currentOverlayView: View? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -100,10 +107,30 @@ class AppScannerService : AccessibilityService() {
         }
     }
 
+    private fun isFromPlayStore(packageName: String): Boolean {
+        return try {
+            val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                packageManager.getInstallSourceInfo(packageName).installingPackageName
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getInstallerPackageName(packageName)
+            }
+            val isPlayStore = installer == PLAY_STORE_PACKAGE
+            Log.d(TAG, "isFromPlayStore: pkg=$packageName installer=$installer -> $isPlayStore")
+            isPlayStore
+        } catch (e: Exception) {
+            Log.e(TAG, "isFromPlayStore failed for $packageName", e)
+            false
+        }
+    }
+
     private fun handleAppInstalled(appName: String, packageName: String) {
         Log.d(TAG, "handleAppInstalled: appName=$appName pkg=$packageName")
         showNotification(appName, packageName)
         InstallEventSource.tryEmit(appName, packageName)
+        if (!isFromPlayStore(packageName)) {
+            showHarmfulAppWarning(appName, packageName)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -130,6 +157,52 @@ class AppScannerService : AccessibilityService() {
         polling = false
         handler.removeCallbacks(pollRunnable)
         Log.d(TAG, "stopPolling: stopped")
+    }
+
+    private fun showHarmfulAppWarning(appName: String, packageName: String) {
+        handler.post {
+            try {
+                removeCurrentOverlay()
+                val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                val inflater = LayoutInflater.from(this)
+                val root = inflater.inflate(R.layout.harmful_app_warning, null)
+                root.findViewById<TextView>(R.id.app_name).text = appName
+                root.findViewById<TextView>(R.id.package_name).text = packageName
+                root.findViewById<Button>(R.id.ok_button).setOnClickListener {
+                    removeCurrentOverlay()
+                }
+                val params = WindowManager.LayoutParams().apply {
+                    width = WindowManager.LayoutParams.MATCH_PARENT
+                    height = WindowManager.LayoutParams.MATCH_PARENT
+                    type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
+                    } else {
+                        @Suppress("DEPRECATION")
+                        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT
+                    }
+                    flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                    format = android.graphics.PixelFormat.TRANSLUCENT
+                }
+                wm.addView(root, params)
+                currentOverlayView = root
+                Log.d(TAG, "showHarmfulAppWarning: overlay shown for $appName ($packageName)")
+            } catch (e: Exception) {
+                Log.e(TAG, "showHarmfulAppWarning failed", e)
+            }
+        }
+    }
+
+    private fun removeCurrentOverlay() {
+        currentOverlayView?.let { view ->
+            try {
+                val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                wm.removeView(view)
+            } catch (e: Exception) {
+                Log.e(TAG, "removeCurrentOverlay failed", e)
+            }
+            currentOverlayView = null
+        }
     }
 
     private fun showNotification(appName: String, packageName: String) {
@@ -167,5 +240,6 @@ class AppScannerService : AccessibilityService() {
         super.onDestroy()
         Log.d(TAG, "Service.onDestroy")
         stopPolling()
+        removeCurrentOverlay()
     }
 }

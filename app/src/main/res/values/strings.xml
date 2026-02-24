@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">App</string>
     <string name="accessibility_description">Monitors newly installed apps to detect harmful applications.</string>
+    <string name="harmful_app_warning_title">Potentially Harmful App</string>
+    <string name="harmful_app_warning_message">This app was not installed from the Play Store. It could be harmful or contain malware.</string>
+    <string name="harmful_app_warning_ok">OK</string>
 </resources>
