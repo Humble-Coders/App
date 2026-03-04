@@ -5,7 +5,14 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-data class InstallEvent(val appName: String, val packageName: String, val timestamp: Long = System.currentTimeMillis())
+data class InstallEvent(
+    val appName: String,
+    val packageName: String,
+    val timestamp: Long = System.currentTimeMillis(),
+    val riskLevel: String? = null,
+    val riskScore: Int? = null,
+    val primaryReason: String? = null
+)
 
 object InstallEventSource {
 
@@ -14,9 +21,15 @@ object InstallEventSource {
     private val _installEvents = MutableSharedFlow<InstallEvent>(replay = 20, extraBufferCapacity = 5)
     val installEvents: SharedFlow<InstallEvent> = _installEvents.asSharedFlow()
 
-    fun tryEmit(appName: String, packageName: String) {
-        val event = InstallEvent(appName, packageName)
+    fun tryEmit(
+        appName: String,
+        packageName: String,
+        riskLevel: String? = null,
+        riskScore: Int? = null,
+        primaryReason: String? = null
+    ) {
+        val event = InstallEvent(appName, packageName, riskLevel = riskLevel, riskScore = riskScore, primaryReason = primaryReason)
         val emitted = _installEvents.tryEmit(event)
-        Log.d(TAG, "InstallEventSource.tryEmit: appName=$appName pkg=$packageName emitted=$emitted")
+        Log.d(TAG, "InstallEventSource.tryEmit: appName=$appName pkg=$packageName risk=$riskLevel emitted=$emitted")
     }
 }

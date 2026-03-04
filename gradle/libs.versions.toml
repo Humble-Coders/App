@@ -1,13 +1,18 @@
 [versions]
-agp = "9.0.0-beta03"
+agp = "9.0.0-rc01"
 coreKtx = "1.10.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
-kotlin = "2.0.21"
+kotlin = "2.2.10"
 composeBom = "2024.09.00"
+firebaseBom = "33.7.0"
+zxingCore = "3.5.3"
+zxingAndroid = "4.3.0"
+coroutinesPlayServices = "1.7.3"
+googleServices = "4.4.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,4 +33,5 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 

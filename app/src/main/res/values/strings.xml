@@ -4,4 +4,20 @@
     <string name="harmful_app_warning_title">Potentially Harmful App</string>
     <string name="harmful_app_warning_message">This app was not installed from the Play Store. It could be harmful or contain malware.</string>
     <string name="harmful_app_warning_ok">OK</string>
+    <string name="uninstall_app">Uninstall App</string>
+    <string name="risk_title_low">Low Risk Detected</string>
+    <string name="risk_title_medium">Security Alert</string>
+    <string name="risk_title_high">High Risk Warning</string>
+    <string name="risk_title_critical">Critical Threat Detected</string>
+    <string name="risk_dismiss_understand">I Understand</string>
+    <string name="risk_dismiss_keep">Keep Anyway</string>
+    <string name="uninstall_now">Uninstall Now</string>
+    <string name="scanning_app">Scanning %s…</string>
+    <string name="app_verified_safe">%s verified as safe</string>
+
+    <!-- Guardian Protection -->
+    <string name="guardian_alert_title">Guardian Alert</string>
+    <string name="guardian_alert_message">Someone you are protecting just installed a risky app</string>
+    <string name="guardian_acknowledge">Got It</string>
+    <string name="guardian_feature_label">GUARDIAN PROTECTION</string>
 </resources>

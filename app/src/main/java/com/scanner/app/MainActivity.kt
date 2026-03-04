@@ -18,6 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme(colorScheme = darkColorScheme()) {
-                ScannerScreen()
+                AppShell()
             }
         }
     }
@@ -65,6 +68,75 @@ fun isAccessibilityEnabled(context: android.content.Context): Boolean {
     val isEnabled = enabled.contains(expected)
     Log.d(TAG, "isAccessibilityEnabled: $isEnabled")
     return isEnabled
+}
+
+@Composable
+fun AppShell() {
+    val bg = Color(0xFF0D0F14)
+    val accent = Color(0xFF00E5A0)
+    val guardianBlue = Color(0xFF448AFF)
+    val cardBg = Color(0xFF161A22)
+    val textSecondary = Color(0xFF7A8394)
+
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    Scaffold(
+        containerColor = bg,
+        bottomBar = {
+            NavigationBar(
+                containerColor = cardBg,
+                tonalElevation = 0.dp
+            ) {
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Home,
+                            contentDescription = "Scanner"
+                        )
+                    },
+                    label = { Text("Scanner", fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = accent,
+                        selectedTextColor = accent,
+                        unselectedIconColor = textSecondary,
+                        unselectedTextColor = textSecondary,
+                        indicatorColor = Color(0xFF1E2530)
+                    )
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Guardian"
+                        )
+                    },
+                    label = { Text("Guardian", fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = guardianBlue,
+                        selectedTextColor = guardianBlue,
+                        unselectedIconColor = textSecondary,
+                        unselectedTextColor = textSecondary,
+                        indicatorColor = Color(0xFF1E2530)
+                    )
+                )
+            }
+        }
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            when (selectedTab) {
+                0 -> ScannerScreen()
+                1 -> GuardianScreen()
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,24 +180,11 @@ fun ScannerScreen() {
     val cardBg = Color(0xFF161A22)
     val textSecondary = Color(0xFF7A8394)
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = accent,
-                    contentColor = bg,
-                    dismissActionContentColor = bg,
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-        },
-        containerColor = bg
-    ) { padding ->
+    Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .background(bg)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -209,6 +268,14 @@ fun ScannerScreen() {
                     )
                 }
                 items(recentInstalls, key = { "${it.packageName}_${it.timestamp}" }) { event ->
+                    val dotColor = when (event.riskLevel) {
+                        "SAFE" -> accent
+                        "LOW" -> Color(0xFF448AFF)
+                        "MEDIUM" -> Color(0xFFFFB300)
+                        "HIGH" -> Color(0xFFFF6D00)
+                        "CRITICAL" -> Color(0xFFFF1744)
+                        else -> textSecondary
+                    }
                     AnimatedVisibility(
                         visible = true,
                         enter = fadeIn() + slideInVertically()
@@ -225,10 +292,10 @@ fun ScannerScreen() {
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(accent)
+                                    .background(dotColor)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = event.appName,
                                     color = Color.White,
@@ -239,6 +306,23 @@ fun ScannerScreen() {
                                     text = event.packageName,
                                     color = textSecondary,
                                     fontSize = 11.sp
+                                )
+                                if (event.primaryReason != null) {
+                                    Text(
+                                        text = event.primaryReason,
+                                        color = textSecondary,
+                                        fontSize = 10.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                            if (event.riskLevel != null) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = event.riskLevel,
+                                    color = dotColor,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -305,6 +389,18 @@ fun ScannerScreen() {
                 }
                 Spacer(modifier = Modifier.height(32.dp))
             }
+        }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = accent,
+                contentColor = bg,
+                dismissActionContentColor = bg,
+                shape = RoundedCornerShape(12.dp)
+            )
         }
     }
 }

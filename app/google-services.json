@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "189975088769",
+    "project_id": "app-shield-f8b62",
+    "storage_bucket": "app-shield-f8b62.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:189975088769:android:7f915ee99ce60e83724780",
+        "android_client_info": {
+          "package_name": "com.scanner.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHqHbnBoR2nwnb0AF-CTb_cUQ9nuAG8Tc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
